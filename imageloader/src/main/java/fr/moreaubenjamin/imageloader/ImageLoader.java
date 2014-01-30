@@ -34,9 +34,8 @@ public class ImageLoader {
     private int mLoadingPictureResource;
     private int mNoPictureResource;
     private ImageView.ScaleType mLoadingScaleType;
-    private ImageView.ScaleType mScaleType;
 
-    public ImageLoader(Context context, String pathExtension, String cacheFolderName, int loadingPictureResource, int noPictureResource, ImageView.ScaleType loadingScaleType, ImageView.ScaleType scaleType) {
+    public ImageLoader(Context context, String pathExtension, String cacheFolderName, int loadingPictureResource, int noPictureResource, ImageView.ScaleType loadingScaleType) {
         mContext = context;
         mMemoryCache = new MemoryCache(mContext);
         mFileCache = new FileCache(mContext, pathExtension, cacheFolderName);
@@ -44,30 +43,29 @@ public class ImageLoader {
         mLoadingPictureResource = (loadingPictureResource == -1) ? R.drawable.ic_launcher : loadingPictureResource;
         mNoPictureResource = (noPictureResource == -1) ? R.drawable.ic_launcher : noPictureResource;
         mLoadingScaleType = (loadingScaleType == null) ? ImageView.ScaleType.FIT_CENTER : loadingScaleType;
-        mScaleType = (scaleType == null) ? ImageView.ScaleType.FIT_CENTER : scaleType;
     }
 
-    public void displayImage(String url, ImageView imageView, int requiredSize) {
+    public void displayImage(String url, ImageView imageView, int requiredSize, ImageView.ScaleType scaleType) {
         if (!TextUtils.isEmpty(url) && url.startsWith("http://")) {
             url += ImageLoaderSettings.SEPARATOR + requiredSize;
             mImageViews.put(imageView, url);
             Bitmap bitmap = mMemoryCache.get(url);
             if (bitmap != null) {
                 imageView.setImageBitmap(bitmap);
-                imageView.setScaleType(mScaleType);
+                imageView.setScaleType(scaleType);
             } else {
-                queuePhoto(url, imageView, requiredSize);
+                queuePhoto(url, imageView, requiredSize, scaleType);
                 imageView.setImageResource(mLoadingPictureResource);
                 imageView.setScaleType(mLoadingScaleType);
             }
         } else {
             imageView.setImageResource(mNoPictureResource);
-            imageView.setScaleType(mScaleType);
+            imageView.setScaleType(scaleType);
         }
     }
 
-    private void queuePhoto(String url, ImageView imageView, int requiredSize) {
-        PhotoToLoad photoToLoad = new PhotoToLoad(url, imageView, requiredSize);
+    private void queuePhoto(String url, ImageView imageView, int requiredSize, ImageView.ScaleType scaleType) {
+        PhotoToLoad photoToLoad = new PhotoToLoad(url, imageView, requiredSize, scaleType);
         mExecutorService.submit(new PhotosLoader(photoToLoad));
     }
 
@@ -75,11 +73,13 @@ public class ImageLoader {
         public String mUrl;
         public ImageView mImageView;
         public int mRequiredSize;
+        public ImageView.ScaleType mScaleType;
 
-        public PhotoToLoad(String url, ImageView imageView, int requiredSize) {
+        public PhotoToLoad(String url, ImageView imageView, int requiredSize, ImageView.ScaleType scaleType) {
             mUrl = url;
             mImageView = imageView;
             mRequiredSize = requiredSize;
+            mScaleType = scaleType;
         }
     }
 
@@ -216,10 +216,10 @@ public class ImageLoader {
             }
             if (mBitmap != null) {
                 mPhotoToLoad.mImageView.setImageBitmap(mBitmap);
-                mPhotoToLoad.mImageView.setScaleType(mScaleType);
+                mPhotoToLoad.mImageView.setScaleType(mPhotoToLoad.mScaleType);
             } else {
                 mPhotoToLoad.mImageView.setImageResource(mNoPictureResource);
-                mPhotoToLoad.mImageView.setScaleType(mScaleType);
+                mPhotoToLoad.mImageView.setScaleType(mPhotoToLoad.mScaleType);
             }
         }
     }
