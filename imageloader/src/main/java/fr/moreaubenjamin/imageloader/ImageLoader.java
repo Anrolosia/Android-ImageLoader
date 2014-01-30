@@ -43,7 +43,9 @@ public class ImageLoader {
         mExecutorService = Executors.newFixedThreadPool(ImageLoaderSettings.THREAD_NUMBER);
         mLoadingPictureResource = (loadingPictureResource == -1) ? R.drawable.ic_launcher : loadingPictureResource;
         mNoPictureResource = (noPictureResource == -1) ? R.drawable.ic_launcher : noPictureResource;
-        mLoadingScaleType = (loadingScaleType == null) ? ImageView.ScaleType.FIT_CENTER : loadingScaleType;
+        if (loadingScaleType != null) {
+            mLoadingScaleType = loadingScaleType;
+        }
     }
 
     public void displayImage(String url, ImageView imageView, int requiredSize, ImageView.ScaleType scaleType) {
@@ -53,15 +55,21 @@ public class ImageLoader {
             Bitmap bitmap = mMemoryCache.get(url);
             if (bitmap != null) {
                 imageView.setImageBitmap(bitmap);
-                imageView.setScaleType(scaleType);
+                if (scaleType != null) {
+                    imageView.setScaleType(scaleType);
+                }
             } else {
                 queuePhoto(url, imageView, requiredSize, scaleType);
                 imageView.setImageResource(mLoadingPictureResource);
-                imageView.setScaleType(mLoadingScaleType);
+                if (mLoadingScaleType != null) {
+                    imageView.setScaleType(mLoadingScaleType);
+                }
             }
         } else {
             imageView.setImageResource(mNoPictureResource);
-            imageView.setScaleType(scaleType);
+            if (scaleType != null) {
+                imageView.setScaleType(scaleType);
+            }
         }
     }
 
@@ -219,10 +227,14 @@ public class ImageLoader {
             }
             if (mBitmap != null) {
                 mPhotoToLoad.mImageView.setImageBitmap(mBitmap);
-                mPhotoToLoad.mImageView.setScaleType(mPhotoToLoad.mScaleType);
+                if (mPhotoToLoad.mScaleType != null) {
+                    mPhotoToLoad.mImageView.setScaleType(mPhotoToLoad.mScaleType);
+                }
             } else {
                 mPhotoToLoad.mImageView.setImageResource(mNoPictureResource);
-                mPhotoToLoad.mImageView.setScaleType(mPhotoToLoad.mScaleType);
+                if (mPhotoToLoad.mScaleType != null) {
+                    mPhotoToLoad.mImageView.setScaleType(mPhotoToLoad.mScaleType);
+                }
             }
         }
     }
