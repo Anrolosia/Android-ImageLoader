@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ImageLoader</string>
+
+    <string name="memory_cache_set_limit">MemoryCache will use up to %1$sMB</string>
+    <string name="memory_cache_check_size_start">cache size=%1$s length=%2$s</string>
+    <string name="memory_cache_check_size_end">Clean cache. New size %1$s</string>
+</resources>
