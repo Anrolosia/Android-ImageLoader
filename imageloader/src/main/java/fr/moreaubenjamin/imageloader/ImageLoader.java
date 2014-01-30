@@ -18,6 +18,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.WeakHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -98,8 +99,8 @@ public class ImageLoader {
                 }
                 String url = mPhotoToLoad.mUrl;
                 if (url.contains(ImageLoaderSettings.SEPARATOR)) {
-                    String[] urlTemp = url.split(ImageLoaderSettings.SEPARATOR);
-                    url = urlTemp[0];
+                    StringTokenizer tokens = new StringTokenizer(url, ImageLoaderSettings.SEPARATOR);
+                    url = tokens.nextToken();
                 }
                 Bitmap bitmap = getBitmap(url, mPhotoToLoad.mRequiredSize);
                 mMemoryCache.put(mPhotoToLoad.mUrl, bitmap);
@@ -116,7 +117,7 @@ public class ImageLoader {
 
     boolean imageViewReused(PhotoToLoad photoToLoad) {
         String tag = mImageViews.get(photoToLoad.mImageView);
-        return (tag == null) || tag.equals(photoToLoad.mUrl);
+        return (tag == null) || !tag.equals(photoToLoad.mUrl);
     }
 
     private Bitmap getBitmap(String url, int requiredSize) {
@@ -160,13 +161,15 @@ public class ImageLoader {
             int widthTmp = options1.outWidth;
             int heightTmp = options1.outHeight;
             int scale = 1;
-            while (true) {
-                if (((widthTmp / 2) < requiredSize) || ((heightTmp / 2) < requiredSize)) {
-                    break;
+            if (requiredSize > -1) {
+                while (true) {
+                    if (((widthTmp / 2) < requiredSize) || ((heightTmp / 2) < requiredSize)) {
+                        break;
+                    }
+                    widthTmp /= 2;
+                    heightTmp /= 2;
+                    scale *= 2;
                 }
-                widthTmp /= 2;
-                heightTmp /= 2;
-                scale *= 2;
             }
 
             BitmapFactory.Options options2 = new BitmapFactory.Options();
