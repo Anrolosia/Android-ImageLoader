@@ -36,15 +36,15 @@ public class ImageLoader {
     private ImageView.ScaleType mLoadingScaleType;
     private ImageView.ScaleType mScaleType;
 
-    public ImageLoader(Context context, String cacheFolderName, int loadingPictureResource, int noPictureResource, ImageView.ScaleType loadingScaleType, ImageView.ScaleType scaleType) {
+    public ImageLoader(Context context, String pathExtension, String cacheFolderName, int loadingPictureResource, int noPictureResource, ImageView.ScaleType loadingScaleType, ImageView.ScaleType scaleType) {
         mContext = context;
         mMemoryCache = new MemoryCache(mContext);
-        mFileCache = new FileCache(mContext, cacheFolderName);
+        mFileCache = new FileCache(mContext, pathExtension, cacheFolderName);
         mExecutorService = Executors.newFixedThreadPool(ImageLoaderSettings.THREAD_NUMBER);
-        mLoadingPictureResource = loadingPictureResource;
-        mNoPictureResource = noPictureResource;
-        mLoadingScaleType = loadingScaleType;
-        mScaleType = scaleType;
+        mLoadingPictureResource = (loadingPictureResource == -1) ? R.drawable.ic_launcher : loadingPictureResource;
+        mNoPictureResource = (noPictureResource == -1) ? R.drawable.ic_launcher : noPictureResource;
+        mLoadingScaleType = (loadingScaleType == null) ? ImageView.ScaleType.FIT_CENTER : loadingScaleType;
+        mScaleType = (scaleType == null) ? ImageView.ScaleType.FIT_CENTER : scaleType;
     }
 
     public void displayImage(String url, ImageView imageView, int requiredSize) {

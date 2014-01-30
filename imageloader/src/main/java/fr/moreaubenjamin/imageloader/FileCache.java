@@ -12,10 +12,10 @@ public class FileCache {
     private Context mContext;
     private File mCacheDir;
 
-    public FileCache(Context context, String cacheFolderName) {
+    public FileCache(Context context, String pathExtension, String cacheFolderName) {
         mContext = context;
         if (android.os.Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            mCacheDir = new File(android.os.Environment.getExternalStorageDirectory(), cacheFolderName);
+            mCacheDir = new File(android.os.Environment.getExternalStorageDirectory() + ((pathExtension == null) ? "" : "/" + pathExtension), cacheFolderName);
         } else {
             mCacheDir = mContext.getCacheDir();
         }
