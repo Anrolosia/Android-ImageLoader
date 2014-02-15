@@ -49,7 +49,7 @@ public class ImageLoader {
     }
 
     public void displayImage(String url, ImageView imageView, int requiredSize, ImageView.ScaleType scaleType) {
-        if (!TextUtils.isEmpty(url) && url.startsWith("http://")) {
+        if (!TextUtils.isEmpty(url) && (url.startsWith("http://") || url.startsWith("https://"))) {
             url += ImageLoaderSettings.SEPARATOR + requiredSize;
             mImageViews.put(imageView, url);
             Bitmap bitmap = mMemoryCache.get(url);
