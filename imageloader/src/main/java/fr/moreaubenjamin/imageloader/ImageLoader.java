@@ -4,8 +4,11 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
+import android.support.v7.graphics.Palette;
 import android.text.TextUtils;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,12 +32,13 @@ public class ImageLoader {
     private Context mContext;
     private MemoryCache mMemoryCache;
     private FileCache mFileCache;
-    private Map<ImageView, String> mImageViews = Collections.synchronizedMap(new WeakHashMap<ImageView, String> ());
+    private Map<ImageView, String> mImageViews = Collections.synchronizedMap(new WeakHashMap<ImageView, String>());
     private ExecutorService mExecutorService;
     private Handler mHandler = new Handler();
     private int mLoadingPictureResource;
     private int mNoPictureResource;
     private ImageView.ScaleType mLoadingScaleType;
+    private RelativeLayout contentLayout;
 
     public ImageLoader(Context context, String pathExtension, String cacheFolderName, int loadingPictureResource, int noPictureResource, ImageView.ScaleType loadingScaleType) {
         mContext = context;
@@ -49,6 +53,11 @@ public class ImageLoader {
     }
 
     public void displayImage(String url, ImageView imageView, int requiredSize, ImageView.ScaleType scaleType) {
+        displayImage(null, url, imageView, requiredSize, scaleType);
+    }
+
+    public void displayImage(RelativeLayout contentLayout, String url, ImageView imageView, int requiredSize, ImageView.ScaleType scaleType) {
+        this.contentLayout = contentLayout;
         if (!TextUtils.isEmpty(url) && (url.startsWith("http://") || url.startsWith("https://"))) {
             url += ImageLoaderSettings.SEPARATOR + requiredSize;
             mImageViews.put(imageView, url);
@@ -58,19 +67,39 @@ public class ImageLoader {
                 if (scaleType != null) {
                     imageView.setScaleType(scaleType);
                 }
+                defineCorrectColors(bitmap);
             } else {
                 queuePhoto(url, imageView, requiredSize, scaleType);
                 imageView.setImageResource(mLoadingPictureResource);
                 if (mLoadingScaleType != null) {
                     imageView.setScaleType(mLoadingScaleType);
                 }
+                defineCorrectColors(BitmapFactory.decodeResource(mContext.getResources(), mLoadingPictureResource));
             }
         } else {
             imageView.setImageResource(mNoPictureResource);
             if (scaleType != null) {
                 imageView.setScaleType(scaleType);
             }
+            defineCorrectColors(BitmapFactory.decodeResource(mContext.getResources(), mNoPictureResource));
         }
+    }
+
+    public Bitmap getDistantBitmap(String url, int requiredSize) {
+        if (!TextUtils.isEmpty(url) && (url.startsWith("http://") || url.startsWith("https://"))) {
+            url += ImageLoaderSettings.SEPARATOR + requiredSize;
+            Bitmap bitmap = mMemoryCache.get(url);
+            if (bitmap != null) {
+                return bitmap;
+            } else {
+                if (url.contains(ImageLoaderSettings.SEPARATOR)) {
+                    StringTokenizer tokens = new StringTokenizer(url, ImageLoaderSettings.SEPARATOR);
+                    url = tokens.nextToken();
+                }
+                return getBitmap(url, requiredSize);
+            }
+        }
+        return null;
     }
 
     private void queuePhoto(String url, ImageView imageView, int requiredSize, ImageView.ScaleType scaleType) {
@@ -150,7 +179,8 @@ public class ImageLoader {
             bitmap2 = decodeFile(file, requiredSize);
             return bitmap2;
         } catch (Throwable ex) {
-            ex.printStackTrace();;
+            ex.printStackTrace();
+            ;
             if (ex instanceof OutOfMemoryError) {
                 mMemoryCache.clear();
             }
@@ -198,15 +228,14 @@ public class ImageLoader {
         final int buffer_size = 1024;
         try {
             byte[] bytes = new byte[buffer_size];
-            for(  ; ; ) {
+            for (; ; ) {
                 int count = inputStream.read(bytes, 0, buffer_size);
                 if (count == -1) {
                     break;
                 }
                 outputStream.write(bytes, 0, count);
             }
-        }
-        catch(Exception ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
         }
     }
@@ -230,12 +259,42 @@ public class ImageLoader {
                 if (mPhotoToLoad.mScaleType != null) {
                     mPhotoToLoad.mImageView.setScaleType(mPhotoToLoad.mScaleType);
                 }
+                defineCorrectColors(mBitmap);
             } else {
                 mPhotoToLoad.mImageView.setImageResource(mNoPictureResource);
                 if (mPhotoToLoad.mScaleType != null) {
                     mPhotoToLoad.mImageView.setScaleType(mPhotoToLoad.mScaleType);
                 }
+                defineCorrectColors(BitmapFactory.decodeResource(mContext.getResources(), mNoPictureResource));
             }
+        }
+    }
+
+    private void defineCorrectColors(Bitmap bitmap) {
+        if (contentLayout != null) {
+            Palette.generateAsync(bitmap,
+                    new Palette.PaletteAsyncListener() {
+                        @Override
+                        public void onGenerated(Palette palette) {
+                            Palette.Swatch vibrant =
+                                    palette.getVibrantSwatch();
+                            if (vibrant != null) {
+                                // If we have a vibrant color
+                                // update the title TextView
+                                contentLayout.setBackgroundColor(
+                                        vibrant.getRgb());
+                                if (contentLayout.getChildCount() > 0) {
+                                    for (int i = 0; i < contentLayout.getChildCount(); i++) {
+                                        TextView textView = (TextView) contentLayout.getChildAt(i);
+                                        if (textView != null) {
+                                            textView.setTextColor(
+                                                    vibrant.getTitleTextColor());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
         }
     }
 
